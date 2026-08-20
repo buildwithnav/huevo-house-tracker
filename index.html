@@ -153,6 +153,9 @@ body {
 
 .item:last-child { border-bottom: none; }
 .item.checked { background: var(--green-light); }
+.item.submitted { background: #f0f0f0; opacity: 0.55; pointer-events: none; }
+.item.submitted .item-text { text-decoration: line-through; color: #999; }
+.item.submitted .checkbox { background: #999; border-color: #999; }
 .item.sub-item { padding-left: 44px; }
 
 .checkbox {
@@ -226,6 +229,28 @@ body {
 }
 
 .action-btn:active { transform: scale(0.9); }
+
+.submit-btn {
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 6px;
+}
+
+.submit-btn:active { transform: scale(0.95); }
+
+.submitted-badge {
+  font-size: 10px;
+  color: #999;
+  font-weight: 600;
+  margin-top: 4px;
+}
 
 .note {
   background: var(--blue-light);
@@ -477,7 +502,6 @@ body {
   <div class="content" id="content"></div>
 
   <div class="bottom-bar">
-    <button class="bottom-btn" onclick="generateReport()">Report</button>
     <button class="bottom-btn" onclick="switchUser()">Switch User</button>
   </div>
 </div>
@@ -789,6 +813,7 @@ function getItemState(id) {
 
 function toggleItem(id) {
   if (!state.items[id]) state.items[id] = { checked: false, notes: [] };
+  if (state.items[id].submitted) return;
   state.items[id].checked = !state.items[id].checked;
   if (state.items[id].checked) {
     state.items[id].checkedAt = new Date().toISOString();
@@ -797,6 +822,15 @@ function toggleItem(id) {
     delete state.items[id].checkedAt;
     delete state.items[id].checkedBy;
   }
+  saveState();
+  render();
+}
+
+function submitItem(id) {
+  if (!state.items[id]) return;
+  state.items[id].submitted = true;
+  state.items[id].submittedAt = new Date().toISOString();
+  state.items[id].submittedBy = currentUser;
   saveState();
   render();
 }
@@ -940,16 +974,20 @@ function render() {
       const isCustom = idx >= section.items.length;
       const customIdx = idx - section.items.length;
 
-      html += `<div class="item ${s.checked ? 'checked' : ''}">
-        <div class="checkbox ${s.checked ? 'checked' : ''}" onclick="toggleItem('${item.id}')"></div>
+      const itemClass = s.submitted ? 'submitted' : (s.checked ? 'checked' : '');
+      html += `<div class="item ${itemClass}">
+        <div class="checkbox ${s.checked || s.submitted ? 'checked' : ''}" onclick="toggleItem('${item.id}')"></div>
         <div class="item-content">
           <div class="item-text">${item.text}</div>`;
 
-      if (s.checked && s.checkedAt) {
+      if (s.submitted) {
+        html += `<div class="submitted-badge">Submitted by ${s.submittedBy} on ${formatTime(s.submittedAt)}</div>`;
+      } else if (s.checked && s.checkedAt) {
         html += `<div class="item-meta">Done by ${s.checkedBy || 'unknown'} on ${formatTime(s.checkedAt)}</div>`;
+        html += `<button class="submit-btn" onclick="submitItem('${item.id}')">Submit</button>`;
       }
 
-      if (s.notes && s.notes.length > 0) {
+      if (s.notes && s.notes.length > 0 && !s.submitted) {
         s.notes.forEach((note, ni) => {
           html += `<div class="note">
             <button class="note-delete" onclick="deleteNote('${item.id}', ${ni})">x</button>
@@ -962,12 +1000,14 @@ function render() {
         });
       }
 
-      html += `</div>
-        <div class="item-actions">
+      html += `</div>`;
+      if (!s.submitted) {
+        html += `<div class="item-actions">
           <button class="action-btn" onclick="openNoteModal('${item.id}', '${item.text.replace(/'/g, "\\'")}')">📝</button>
           ${isCustom ? `<button class="action-btn" onclick="deleteCustomItem('${sectionKey}', ${customIdx})">🗑</button>` : ''}
-        </div>
-      </div>`;
+        </div>`;
+      }
+      html += `</div>`;
     });
 
     html += `<div class="add-item-row">
