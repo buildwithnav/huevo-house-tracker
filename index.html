@@ -474,6 +474,117 @@ body {
   overflow-y: auto;
   margin-bottom: 12px;
 }
+
+.fab-mic {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.fab-mic:active { transform: scale(0.9); }
+.fab-mic.recording { background: var(--red); animation: pulse 1s infinite; }
+
+.fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-status {
+  position: fixed;
+  bottom: 135px;
+  right: 20px;
+  background: var(--text);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 101;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  display: none;
+}
+
+.voice-status.active { display: block; }
+
+.inbox-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.inbox-overlay.active { display: flex; }
+
+.inbox-panel {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.inbox-panel h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+
+.inbox-note {
+  background: var(--orange-light);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.inbox-note-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.inbox-note-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.inbox-note-processed {
+  opacity: 0.4;
+}
+
+.inbox-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
 </style>
 </head>
 <body>
@@ -501,8 +612,25 @@ body {
 
   <div class="content" id="content"></div>
 
+  <button class="fab-mic" id="fab-mic" onclick="toggleFabVoice()">
+    🎙
+    <span class="fab-badge hidden" id="fab-badge">0</span>
+  </button>
+  <div class="voice-status" id="voice-status">Listening...</div>
+
   <div class="bottom-bar">
+    <button class="bottom-btn" onclick="showInbox()">Inbox</button>
     <button class="bottom-btn" onclick="switchUser()">Switch User</button>
+  </div>
+</div>
+
+<div class="inbox-overlay" id="inbox-overlay">
+  <div class="inbox-panel">
+    <h3>Voice Inbox</h3>
+    <div id="inbox-content"></div>
+    <div style="margin-top:12px">
+      <button class="btn btn-secondary" onclick="closeInbox()" style="width:100%">Close</button>
+    </div>
   </div>
 </div>
 
@@ -1076,9 +1204,131 @@ function copyReport() {
   });
 }
 
+// Voice Inbox
+let fabRecognition = null;
+let voiceNotes = {};
+
+function initVoiceInbox() {
+  db.ref('voiceNotes').on('value', function(snapshot) {
+    voiceNotes = snapshot.val() || {};
+    updateInboxBadge();
+  });
+}
+
+function updateInboxBadge() {
+  const badge = document.getElementById('fab-badge');
+  const unprocessed = Object.values(voiceNotes).filter(n => !n.processed).length;
+  if (unprocessed > 0) {
+    badge.textContent = unprocessed;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function toggleFabVoice() {
+  const btn = document.getElementById('fab-mic');
+  const status = document.getElementById('voice-status');
+
+  if (btn.classList.contains('recording')) {
+    stopFabVoice();
+    return;
+  }
+
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice input not supported. Try Chrome.');
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  fabRecognition = new SpeechRecognition();
+  fabRecognition.continuous = true;
+  fabRecognition.interimResults = false;
+  fabRecognition.lang = 'en-US';
+
+  let fullTranscript = '';
+
+  fabRecognition.onresult = function(e) {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        fullTranscript += e.results[i][0].transcript + ' ';
+        status.textContent = fullTranscript.substring(0, 60) + '...';
+      }
+    }
+  };
+
+  fabRecognition.onerror = function() { stopFabVoice(); };
+
+  fabRecognition.onend = function() {
+    if (fullTranscript.trim()) {
+      saveVoiceNote(fullTranscript.trim());
+    }
+    btn.classList.remove('recording');
+    btn.textContent = '🎙';
+    status.classList.remove('active');
+    fabRecognition = null;
+  };
+
+  fabRecognition.start();
+  btn.classList.add('recording');
+  btn.textContent = '⏹';
+  status.textContent = 'Listening...';
+  status.classList.add('active');
+}
+
+function stopFabVoice() {
+  if (fabRecognition) {
+    fabRecognition.stop();
+  }
+}
+
+function saveVoiceNote(text) {
+  const noteId = 'vn_' + Date.now();
+  const note = {
+    text: text,
+    by: currentUser,
+    at: new Date().toISOString(),
+    processed: false
+  };
+  db.ref('voiceNotes/' + noteId).set(note);
+
+  const status = document.getElementById('voice-status');
+  status.textContent = 'Saved!';
+  status.classList.add('active');
+  setTimeout(() => status.classList.remove('active'), 2000);
+}
+
+function showInbox() {
+  const content = document.getElementById('inbox-content');
+  const notes = Object.entries(voiceNotes).sort((a, b) => new Date(b[1].at) - new Date(a[1].at));
+
+  if (notes.length === 0) {
+    content.innerHTML = '<div class="inbox-empty">No voice notes yet. Tap the mic button to record one.</div>';
+  } else {
+    let html = '';
+    notes.forEach(([id, note]) => {
+      html += `<div class="inbox-note ${note.processed ? 'inbox-note-processed' : ''}">
+        <div class="inbox-note-header">
+          <span><strong>${note.by}</strong></span>
+          <span>${formatTime(note.at)}${note.processed ? ' (processed)' : ''}</span>
+        </div>
+        <div class="inbox-note-text">${note.text}</div>
+      </div>`;
+    });
+    content.innerHTML = html;
+  }
+
+  document.getElementById('inbox-overlay').classList.add('active');
+}
+
+function closeInbox() {
+  document.getElementById('inbox-overlay').classList.remove('active');
+}
+
 // Init
 loadState();
 initFirebase();
+initVoiceInbox();
 const savedUser = localStorage.getItem('huevo-tracker-user');
 if (savedUser) {
   selectUser(savedUser);
