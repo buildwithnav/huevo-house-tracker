@@ -910,20 +910,11 @@ function initFirebase() {
           }
         });
       }
-      // Merge customItems — combine arrays, deduplicate by id
+      // CustomItems — Firebase is source of truth
       if (data.customItems) {
-        if (!state.customItems) state.customItems = {};
-        Object.keys(data.customItems).forEach(key => {
-          const remoteItems = data.customItems[key] || [];
-          const localItems = state.customItems[key] || [];
-          const localIds = new Set(localItems.map(i => i.id));
-          remoteItems.forEach(ri => {
-            if (!localIds.has(ri.id)) {
-              localItems.push(ri);
-            }
-          });
-          state.customItems[key] = localItems;
-        });
+        state.customItems = data.customItems;
+      } else {
+        state.customItems = {};
       }
       localStorage.setItem('huevo-tracker-state', JSON.stringify(state));
       render();
