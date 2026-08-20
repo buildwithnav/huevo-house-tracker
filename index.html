@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Huevo House Tracker</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -504,6 +506,22 @@ body {
 </div>
 
 <script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAPAoESn3QluTQfLJLUr5hCgUfWBjUEKRg",
+  authDomain: "huevo-house-tracker-15d89.firebaseapp.com",
+  projectId: "huevo-house-tracker-15d89",
+  storageBucket: "huevo-house-tracker-15d89.firebasestorage.app",
+  messagingSenderId: "460668626892",
+  appId: "1:460668626892:web:e0e3bc73d2ee92bde35f69",
+  databaseURL: "https://huevo-house-tracker-15d89-default-rtdb.firebaseio.com"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let firebaseReady = false;
+let dbRef = null;
+
 const CHECKLIST_DATA = {
   buildout: [
     {
@@ -712,6 +730,33 @@ function saveState() {
   state.lastUpdated = new Date().toISOString();
   state.lastUser = currentUser;
   localStorage.setItem('huevo-tracker-state', JSON.stringify(state));
+  if (firebaseReady && dbRef) {
+    dbRef.set(state);
+  }
+}
+
+function initFirebase() {
+  dbRef = db.ref('tracker');
+  dbRef.on('value', function(snapshot) {
+    const data = snapshot.val();
+    if (data) {
+      firebaseReady = true;
+      const localUpdated = state.lastUpdated ? new Date(state.lastUpdated).getTime() : 0;
+      const remoteUpdated = data.lastUpdated ? new Date(data.lastUpdated).getTime() : 0;
+      if (remoteUpdated > localUpdated) {
+        state = data;
+        localStorage.setItem('huevo-tracker-state', JSON.stringify(state));
+        render();
+      }
+    } else {
+      firebaseReady = true;
+      if (state.items && Object.keys(state.items).length > 0) {
+        dbRef.set(state);
+      }
+    }
+  }, function() {
+    firebaseReady = false;
+  });
 }
 
 function selectUser(name) {
@@ -993,6 +1038,7 @@ function copyReport() {
 
 // Init
 loadState();
+initFirebase();
 const savedUser = localStorage.getItem('huevo-tracker-user');
 if (savedUser) {
   selectUser(savedUser);
