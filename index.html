@@ -893,13 +893,40 @@ function initFirebase() {
     const data = snapshot.val();
     if (data) {
       firebaseReady = true;
-      const localUpdated = state.lastUpdated ? new Date(state.lastUpdated).getTime() : 0;
-      const remoteUpdated = data.lastUpdated ? new Date(data.lastUpdated).getTime() : 0;
-      if (remoteUpdated > localUpdated) {
-        state = data;
-        localStorage.setItem('huevo-tracker-state', JSON.stringify(state));
-        render();
+      // Always merge remote data — remote is source of truth
+      // Merge items
+      if (data.items) {
+        if (!state.items) state.items = {};
+        Object.keys(data.items).forEach(key => {
+          const remote = data.items[key];
+          const local = state.items[key];
+          if (!local) {
+            state.items[key] = remote;
+          } else {
+            const remoteTime = remote.checkedAt ? new Date(remote.checkedAt).getTime() : 0;
+            const localTime = local.checkedAt ? new Date(local.checkedAt).getTime() : 0;
+            if (remoteTime > localTime) state.items[key] = remote;
+            if (remote.submitted && !local.submitted) state.items[key] = remote;
+          }
+        });
       }
+      // Merge customItems — combine arrays, deduplicate by id
+      if (data.customItems) {
+        if (!state.customItems) state.customItems = {};
+        Object.keys(data.customItems).forEach(key => {
+          const remoteItems = data.customItems[key] || [];
+          const localItems = state.customItems[key] || [];
+          const localIds = new Set(localItems.map(i => i.id));
+          remoteItems.forEach(ri => {
+            if (!localIds.has(ri.id)) {
+              localItems.push(ri);
+            }
+          });
+          state.customItems[key] = localItems;
+        });
+      }
+      localStorage.setItem('huevo-tracker-state', JSON.stringify(state));
+      render();
     } else {
       firebaseReady = true;
       if (state.items && Object.keys(state.items).length > 0) {
