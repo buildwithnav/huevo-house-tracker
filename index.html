@@ -894,21 +894,8 @@ function initFirebase() {
     if (data) {
       firebaseReady = true;
       // Always merge remote data — remote is source of truth
-      // Merge items
       if (data.items) {
-        if (!state.items) state.items = {};
-        Object.keys(data.items).forEach(key => {
-          const remote = data.items[key];
-          const local = state.items[key];
-          if (!local) {
-            state.items[key] = remote;
-          } else {
-            const remoteTime = remote.checkedAt ? new Date(remote.checkedAt).getTime() : 0;
-            const localTime = local.checkedAt ? new Date(local.checkedAt).getTime() : 0;
-            if (remoteTime > localTime) state.items[key] = remote;
-            if (remote.submitted && !local.submitted) state.items[key] = remote;
-          }
-        });
+        state.items = data.items;
       }
       // CustomItems — Firebase is source of truth
       if (data.customItems) {
