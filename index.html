@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Huevo House Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --border: #e5e5e5;
+  --text: #1a1a1a;
+  --text-dim: #666;
+  --text-muted: #999;
+  --orange: #c45500;
+  --orange-light: #fff3e6;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --blue: #2563eb;
+  --blue-light: #dbeafe;
+  --red: #dc2626;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 80px;
+}
+
+.header {
+  background: var(--text);
+  color: white;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.header-sub {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 62px;
+  z-index: 99;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  color: var(--orange);
+  border-bottom-color: var(--orange);
+}
+
+.progress-bar {
+  background: var(--border);
+  height: 6px;
+  width: 100%;
+}
+
+.progress-fill {
+  background: var(--green);
+  height: 100%;
+  transition: width 0.4s ease;
+  border-radius: 0 3px 3px 0;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.content { padding: 12px; }
+
+.section {
+  margin-bottom: 16px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.section-header {
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.section-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 12px;
+  transition: background 0.15s;
+}
+
+.item:last-child { border-bottom: none; }
+.item.checked { background: var(--green-light); }
+.item.sub-item { padding-left: 44px; }
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  transition: all 0.2s;
+}
+
+.checkbox.checked {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.checkbox.checked::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.item-content { flex: 1; min-width: 0; }
+
+.item-text {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.item.checked .item-text {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+.item-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.item-actions {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 2px;
+}
+
+.action-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: var(--bg);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-dim);
+  transition: all 0.15s;
+}
+
+.action-btn:active { transform: scale(0.9); }
+
+.note {
+  background: var(--blue-light);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #1e40af;
+  line-height: 1.4;
+  position: relative;
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.note-by {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.note-time {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.note-delete {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #93a3b8;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.modal textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+
+.modal textarea:focus { border-color: var(--orange); }
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-primary { background: var(--orange); color: white; }
+.btn-secondary { background: var(--bg); color: var(--text); }
+.btn-mic { background: var(--blue); color: white; flex: 0; width: 48px; min-width: 48px; font-size: 18px; }
+.btn-mic.recording { background: var(--red); animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.add-item-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.add-item-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.add-item-input:focus { border-color: var(--orange); }
+
+.add-item-btn {
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.bottom-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: center;
+}
+
+.bottom-btn:active { background: var(--bg); }
+
+.user-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  padding: 40px;
+}
+
+.user-picker h2 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.user-picker p {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.user-btn {
+  width: 100%;
+  max-width: 280px;
+  padding: 18px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.user-btn:active {
+  border-color: var(--orange);
+  background: var(--orange-light);
+}
+
+.hidden { display: none; }
+
+.report-content {
+  white-space: pre-wrap;
+  font-size: 12px;
+  font-family: monospace;
+  background: var(--bg);
+  padding: 12px;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+</style>
+</head>
+<body>
+
+<div id="user-picker" class="user-picker">
+  <h2>Huevo House</h2>
+  <p>Buildout Tracker</p>
+  <button class="user-btn" onclick="selectUser('Nav')">Nav</button>
+  <button class="user-btn" onclick="selectUser('Bhavya')">Bhavya</button>
+</div>
+
+<div id="app" class="hidden">
+  <div class="header">
+    <h1>HUEVO HOUSE TRACKER</h1>
+    <div class="header-sub" id="header-sub">Logged in as Nav | 26135 Bouquet Canyon Rd</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="buildout" onclick="switchTab('buildout')">Buildout</button>
+    <button class="tab" data-tab="supplies" onclick="switchTab('supplies')">Supplies</button>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-text" id="progress-text">0 / 0 complete</div>
+
+  <div class="content" id="content"></div>
+
+  <div class="bottom-bar">
+    <button class="bottom-btn" onclick="generateReport()">Report</button>
+    <button class="bottom-btn" onclick="switchUser()">Switch User</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="note-modal">
+  <div class="modal">
+    <h3 id="note-modal-title">Add Note</h3>
+    <textarea id="note-input" placeholder="Type your note or tap the mic to speak..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeNoteModal()">Cancel</button>
+      <button class="btn btn-mic" id="mic-btn" onclick="toggleVoice()">🎙</button>
+      <button class="btn btn-primary" onclick="saveNote()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="report-modal">
+  <div class="modal">
+    <h3>Progress Report</h3>
+    <div class="report-content" id="report-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeReportModal()">Close</button>
+      <button class="btn btn-primary" onclick="copyReport()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CHECKLIST_DATA = {
+  buildout: [
+    {
+      title: "Permits & Licenses",
+      items: [
+        { id: "bl", text: "Business license — Apply with City of Santa Clarita (2-4 weeks)" },
+        { id: "sp", text: "Seller's permit — Apply online at CDTFA" },
+        { id: "dba", text: "Fictitious business name (DBA) — File with LA County Clerk" },
+        { id: "fbn", text: "FBN newspaper publication — 4 consecutive weeks after filing (~$40-80)" },
+        { id: "hd", text: "Health department — Call LA County EH (26415 Carl Boyer Dr, (888) 700-9995)" },
+        { id: "fhc", text: "Food handler card — Get yours now" },
+        { id: "abc", text: "ABC license — Confirm Type 41 transfer status and timeline" }
+      ]
+    },
+    {
+      title: "Signage",
+      items: [
+        { id: "sign-vendor", text: "Contact sign vendor — drive by property, get quote, start fabrication (2-4 wk lead)" },
+        { id: "sign-banner", text: "Design 'Coming Soon' banner — ready to hang day one" }
+      ]
+    },
+    {
+      title: "Kitchen & Equipment Vendors",
+      items: [
+        { id: "autochlor", text: "AutoChlor — call local rep, start dishwasher lease" },
+        { id: "ecolab", text: "Ecolab — call local rep, set up sanitizing equipment account" }
+      ]
+    },
+    {
+      title: "Beverage",
+      items: [
+        { id: "coke", text: "Coke — call rep, machine placement, tap towers, account, ask about free glassware" }
+      ]
+    },
+    {
+      title: "POS System",
+      items: [
+        { id: "toast", text: "Toast — call, negotiate, mention you're quoting Square and SpotOn" },
+        { id: "square", text: "Square for Restaurants — get quote (1 terminal, 3 KDS, 5-6 handhelds, printers)" },
+        { id: "spoton", text: "SpotOn — get quote for same setup" }
+      ]
+    },
+    {
+      title: "Food & Supply Vendors",
+      items: [
+        { id: "tortilla", text: "Mission Tortilla — contact, set up SC delivery account" },
+        { id: "rdepot", text: "Restaurant Depot — open account at SC/Valencia location (need biz license + tax ID)" },
+        { id: "usfoods", text: "US Foods — set up account, push for rebates and Toast install funding" }
+      ]
+    },
+    {
+      title: "Linen / Mat Service",
+      items: [
+        { id: "mission-linen", text: "Mission Linen — talk in person" },
+        { id: "braun", text: "Braun Linen — get quote (braunlinen.com)" },
+        { id: "calinen", text: "California Linen Service — get quote (calinen.com)" }
+      ]
+    },
+    {
+      title: "Contractors (find now, book for Sep 15+)",
+      items: [
+        { id: "elec", text: "Electrician — speakers, cameras, panel labels" },
+        { id: "plumb", text: "Plumber — drains, grease trap, sewer lateral camera" },
+        { id: "hvac", text: "HVAC tech — inspect all units" },
+        { id: "ansul", text: "Hood / Ansul company — inspection and fire suppression certification" }
+      ]
+    },
+    {
+      title: "Internet",
+      items: [
+        { id: "wifi", text: "Call providers (Spectrum, AT&T) — schedule install for Sep 15" }
+      ]
+    },
+    {
+      title: "Business Credit Cards",
+      items: [
+        { id: "amex", text: "Amex Plum Card — apply for Huevo House LLC (60-day extended pay)" },
+        { id: "chase", text: "Chase Ink Business — apply for Huevo House LLC" }
+      ]
+    },
+    {
+      title: "Furniture & Supplies",
+      items: [
+        { id: "plates", text: "Custom melamine plates — find vendor, order now (lead time)" },
+        { id: "patio", text: "Patio furniture — start shopping (8-12 tables, 30-40 outdoor seats)" }
+      ]
+    },
+    {
+      title: "Equipment to Buy",
+      items: [
+        { id: "tv", text: "55\" TV — security camera monitor for manager's office" },
+        { id: "printer", text: "Office printer" }
+      ]
+    },
+    {
+      title: "Operations Prep (from home)",
+      items: [
+        { id: "recipes", text: "Recipe book — format Bakersfield recipes into standardized cards" },
+        { id: "plating", text: "Plating guide — organize photos into visual book" },
+        { id: "menu-guide", text: "Menu knowledge guide — write up for server training" },
+        { id: "wallart", text: "Wall art — confirm status from Bakersfield warehouse" }
+      ]
+    }
+  ],
+  supplies: [
+    {
+      title: "Caddy Supplies",
+      items: [
+        { id: "s-condiments", text: "Condiment holders" },
+        { id: "s-napkin", text: "Napkin holders" },
+        { id: "s-sugar", text: "Sugar caddies" },
+        { id: "s-salt", text: "Salt & pepper shakers" },
+        { id: "s-sauce", text: "Hot sauce bottles / holders" }
+      ]
+    },
+    {
+      title: "Bar Supplies",
+      items: [
+        { id: "s-shakers", text: "Cocktail shakers" },
+        { id: "s-pourers", text: "Bottle pourers" },
+        { id: "s-jiggers", text: "Jiggers" },
+        { id: "s-icebin", text: "Ice bins" },
+        { id: "s-garnish", text: "Garnish trays" },
+        { id: "s-barmat", text: "Bar mats" },
+        { id: "s-blender", text: "Blender(s)" }
+      ]
+    },
+    {
+      title: "Expo Supplies",
+      items: [
+        { id: "s-heatlamp", text: "Heat lamps" },
+        { id: "s-ticketrail", text: "Ticket rail" },
+        { id: "s-expotools", text: "Expo tools (tongs, spatulas, garnish tweezers)" }
+      ]
+    },
+    {
+      title: "Glassware",
+      items: [
+        { id: "s-mimosa", text: "Mimosa glasses / flutes" },
+        { id: "s-miche", text: "Michelada glasses" },
+        { id: "s-water", text: "Water glasses" },
+        { id: "s-coffee", text: "Coffee mugs" },
+        { id: "s-juice", text: "Juice glasses" }
+      ]
+    },
+    {
+      title: "Plates & Dinnerware",
+      items: [
+        { id: "s-plates-lg", text: "Dinner plates (melamine)" },
+        { id: "s-plates-sm", text: "Side plates" },
+        { id: "s-bowls", text: "Bowls (soup, cereal)" },
+        { id: "s-ramekins", text: "Ramekins (sauces, sides)" }
+      ]
+    },
+    {
+      title: "Silverware & Utensils",
+      items: [
+        { id: "s-forks", text: "Forks" },
+        { id: "s-knives", text: "Knives" },
+        { id: "s-spoons", text: "Spoons" },
+        { id: "s-steak", text: "Steak knives" },
+        { id: "s-serving", text: "Serving utensils" }
+      ]
+    },
+    {
+      title: "To-Go Supplies",
+      items: [
+        { id: "s-togo-cont", text: "To-go containers (various sizes)" },
+        { id: "s-togo-bags", text: "To-go bags (branded if possible)" },
+        { id: "s-togo-utensils", text: "Disposable utensils" },
+        { id: "s-togo-cups", text: "To-go drink cups + lids" },
+        { id: "s-togo-straws", text: "Straws" }
+      ]
+    },
+    {
+      title: "Cleaning Supplies",
+      items: [
+        { id: "s-sanitizer", text: "Sanitizer buckets + solution" },
+        { id: "s-towels", text: "Bar towels / rags" },
+        { id: "s-broom", text: "Brooms, dustpans, mops" },
+        { id: "s-trash", text: "Trash bags (various sizes)" },
+        { id: "s-gloves", text: "Disposable gloves" },
+        { id: "s-degreaser", text: "Kitchen degreaser" },
+        { id: "s-handsoap", text: "Hand soap (restrooms + kitchen)" }
+      ]
+    }
+  ]
+};
+
+let currentUser = null;
+let currentTab = 'buildout';
+let state = {};
+let noteItemId = null;
+let recognition = null;
+
+function loadState() {
+  const saved = localStorage.getItem('huevo-tracker-state');
+  if (saved) {
+    state = JSON.parse(saved);
+  } else {
+    state = { items: {}, customItems: {} };
+  }
+}
+
+function saveState() {
+  state.lastUpdated = new Date().toISOString();
+  state.lastUser = currentUser;
+  localStorage.setItem('huevo-tracker-state', JSON.stringify(state));
+}
+
+function selectUser(name) {
+  currentUser = name;
+  localStorage.setItem('huevo-tracker-user', name);
+  document.getElementById('user-picker').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('header-sub').textContent = `Logged in as ${name} | 26135 Bouquet Canyon Rd`;
+  loadState();
+  render();
+}
+
+function switchUser() {
+  localStorage.removeItem('huevo-tracker-user');
+  document.getElementById('user-picker').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  render();
+}
+
+function getItemState(id) {
+  return state.items[id] || { checked: false, notes: [] };
+}
+
+function toggleItem(id) {
+  if (!state.items[id]) state.items[id] = { checked: false, notes: [] };
+  state.items[id].checked = !state.items[id].checked;
+  if (state.items[id].checked) {
+    state.items[id].checkedAt = new Date().toISOString();
+    state.items[id].checkedBy = currentUser;
+  } else {
+    delete state.items[id].checkedAt;
+    delete state.items[id].checkedBy;
+  }
+  saveState();
+  render();
+}
+
+function openNoteModal(id, text) {
+  noteItemId = id;
+  document.getElementById('note-modal-title').textContent = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+  document.getElementById('note-input').value = '';
+  document.getElementById('note-modal').classList.add('active');
+  setTimeout(() => document.getElementById('note-input').focus(), 100);
+}
+
+function closeNoteModal() {
+  document.getElementById('note-modal').classList.remove('active');
+  noteItemId = null;
+  stopVoice();
+}
+
+function saveNote() {
+  const text = document.getElementById('note-input').value.trim();
+  if (!text) return;
+  if (!state.items[noteItemId]) state.items[noteItemId] = { checked: false, notes: [] };
+  if (!state.items[noteItemId].notes) state.items[noteItemId].notes = [];
+  state.items[noteItemId].notes.push({
+    text: text,
+    by: currentUser,
+    at: new Date().toISOString()
+  });
+  saveState();
+  closeNoteModal();
+  render();
+}
+
+function deleteNote(itemId, noteIndex) {
+  if (state.items[itemId] && state.items[itemId].notes) {
+    state.items[itemId].notes.splice(noteIndex, 1);
+    saveState();
+    render();
+  }
+}
+
+function toggleVoice() {
+  const btn = document.getElementById('mic-btn');
+  if (btn.classList.contains('recording')) {
+    stopVoice();
+    return;
+  }
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice input not supported on this browser. Try Chrome.');
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  const textarea = document.getElementById('note-input');
+  const existing = textarea.value;
+  recognition.onresult = function(e) {
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    textarea.value = existing + (existing ? ' ' : '') + transcript;
+  };
+  recognition.onerror = function() { stopVoice(); };
+  recognition.onend = function() { stopVoice(); };
+  recognition.start();
+  btn.classList.add('recording');
+  btn.textContent = '⏹';
+}
+
+function stopVoice() {
+  const btn = document.getElementById('mic-btn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎙';
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+  }
+}
+
+function addCustomItem(sectionTitle) {
+  const input = document.querySelector(`[data-add-section="${sectionTitle}"]`);
+  const text = input.value.trim();
+  if (!text) return;
+  const tabKey = currentTab;
+  const key = `${tabKey}-${sectionTitle}`;
+  if (!state.customItems) state.customItems = {};
+  if (!state.customItems[key]) state.customItems[key] = [];
+  const id = 'custom-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+  state.customItems[key].push({ id, text, addedBy: currentUser, addedAt: new Date().toISOString() });
+  saveState();
+  input.value = '';
+  render();
+}
+
+function deleteCustomItem(sectionKey, index) {
+  if (state.customItems && state.customItems[sectionKey]) {
+    const item = state.customItems[sectionKey][index];
+    if (item && state.items[item.id]) delete state.items[item.id];
+    state.customItems[sectionKey].splice(index, 1);
+    saveState();
+    render();
+  }
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  const month = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return `${month}, ${time}`;
+}
+
+function render() {
+  const sections = CHECKLIST_DATA[currentTab];
+  let totalItems = 0;
+  let checkedItems = 0;
+  let html = '';
+
+  sections.forEach(section => {
+    const sectionKey = `${currentTab}-${section.title}`;
+    const customItems = (state.customItems && state.customItems[sectionKey]) || [];
+    const allItems = [...section.items, ...customItems];
+
+    let sectionChecked = 0;
+    allItems.forEach(item => {
+      const s = getItemState(item.id);
+      totalItems++;
+      if (s.checked) { checkedItems++; sectionChecked++; }
+    });
+
+    html += `<div class="section">`;
+    html += `<div class="section-header">
+      <span>${section.title}</span>
+      <span class="section-count">${sectionChecked}/${allItems.length}</span>
+    </div>`;
+
+    allItems.forEach((item, idx) => {
+      const s = getItemState(item.id);
+      const isCustom = idx >= section.items.length;
+      const customIdx = idx - section.items.length;
+
+      html += `<div class="item ${s.checked ? 'checked' : ''}">
+        <div class="checkbox ${s.checked ? 'checked' : ''}" onclick="toggleItem('${item.id}')"></div>
+        <div class="item-content">
+          <div class="item-text">${item.text}</div>`;
+
+      if (s.checked && s.checkedAt) {
+        html += `<div class="item-meta">Done by ${s.checkedBy || 'unknown'} on ${formatTime(s.checkedAt)}</div>`;
+      }
+
+      if (s.notes && s.notes.length > 0) {
+        s.notes.forEach((note, ni) => {
+          html += `<div class="note">
+            <button class="note-delete" onclick="deleteNote('${item.id}', ${ni})">x</button>
+            <div class="note-header">
+              <span class="note-by">${note.by}</span>
+              <span class="note-time">${formatTime(note.at)}</span>
+            </div>
+            ${note.text}
+          </div>`;
+        });
+      }
+
+      html += `</div>
+        <div class="item-actions">
+          <button class="action-btn" onclick="openNoteModal('${item.id}', '${item.text.replace(/'/g, "\\'")}')">📝</button>
+          ${isCustom ? `<button class="action-btn" onclick="deleteCustomItem('${sectionKey}', ${customIdx})">🗑</button>` : ''}
+        </div>
+      </div>`;
+    });
+
+    html += `<div class="add-item-row">
+      <input class="add-item-input" data-add-section="${section.title}" placeholder="Add item..." onkeydown="if(event.key==='Enter')addCustomItem('${section.title.replace(/'/g, "\\'")}')">
+      <button class="add-item-btn" onclick="addCustomItem('${section.title.replace(/'/g, "\\'")}')">Add</button>
+    </div>`;
+
+    html += `</div>`;
+  });
+
+  document.getElementById('content').innerHTML = html;
+
+  const pct = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${checkedItems} / ${totalItems} complete (${pct}%)`;
+}
+
+function generateReport() {
+  let report = `HUEVO HOUSE BUILDOUT TRACKER — PROGRESS REPORT\n`;
+  report += `Generated: ${new Date().toLocaleString()}\n`;
+  report += `${'='.repeat(50)}\n\n`;
+
+  ['buildout', 'supplies'].forEach(tab => {
+    const label = tab === 'buildout' ? 'BUILDOUT CHECKLIST' : 'SUPPLIES LIST';
+    report += `--- ${label} ---\n\n`;
+
+    const sections = CHECKLIST_DATA[tab];
+    sections.forEach(section => {
+      const sectionKey = `${tab}-${section.title}`;
+      const customItems = (state.customItems && state.customItems[sectionKey]) || [];
+      const allItems = [...section.items, ...customItems];
+
+      report += `${section.title}\n`;
+      allItems.forEach(item => {
+        const s = getItemState(item.id);
+        const check = s.checked ? 'x' : ' ';
+        report += `  [${check}] ${item.text}`;
+        if (s.checked && s.checkedAt) {
+          report += ` (done ${formatTime(s.checkedAt)} by ${s.checkedBy})`;
+        }
+        report += '\n';
+        if (s.notes && s.notes.length > 0) {
+          s.notes.forEach(note => {
+            report += `      NOTE (${note.by}, ${formatTime(note.at)}): ${note.text}\n`;
+          });
+        }
+      });
+      report += '\n';
+    });
+  });
+
+  document.getElementById('report-content').textContent = report;
+  document.getElementById('report-modal').classList.add('active');
+}
+
+function closeReportModal() {
+  document.getElementById('report-modal').classList.remove('active');
+}
+
+function copyReport() {
+  const text = document.getElementById('report-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('#report-modal .btn-primary');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Init
+loadState();
+const savedUser = localStorage.getItem('huevo-tracker-user');
+if (savedUser) {
+  selectUser(savedUser);
+}
+</script>
+</body>
+</html>
